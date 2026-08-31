@@ -62,3 +62,26 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+
+  docker:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    needs:
+      - backend
+      - frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Build backend test image
+        run: docker build --target test -t it-support-agent-backend:test .
+
+      - name: Run backend tests in Docker
+        run: docker run --rm it-support-agent-backend:test
+
+      - name: Build backend production image
+        run: docker build --target production -t it-support-agent-backend:ci .
+
+      - name: Build frontend production image
+        run: docker build -t it-support-agent-frontend:ci ./frontend
