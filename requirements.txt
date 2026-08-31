@@ -1,6 +1,8 @@
 fastmcp
 langchain-mcp-adapters
 pydantic>=2.10,<3
+pydantic-settings
+python-dotenv
 pytest>=8,<9
 langchain 
 langgraph
