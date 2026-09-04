@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -39,6 +39,10 @@ jobs:
     name: Frontend checks
     runs-on: ubuntu-latest
 
+    env:
+      VITE_BASE_PATH: /${{ github.event.repository.name }}/
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+
     defaults:
       run:
         working-directory: frontend
@@ -61,27 +65,32 @@ jobs:
         run: npm run lint
 
       - name: Build frontend
-        run: npm run build
+        run: npm run build -- --base "$VITE_BASE_PATH"
 
-  docker:
-    name: Build Docker images
-    runs-on: ubuntu-latest
+      - name: Upload GitHub Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: frontend/dist
+
+  deploy:
+    name: Deploy frontend to GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs:
       - backend
       - frontend
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Build backend test image
-        run: docker build --target test -t it-support-agent-backend:test .
-
-      - name: Run backend tests in Docker
-        run: docker run --rm it-support-agent-backend:test
-
-      - name: Build backend production image
-        run: docker build --target production -t it-support-agent-backend:ci .
-
-      - name: Build frontend production image
-        run: docker build -t it-support-agent-frontend:ci ./frontend
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

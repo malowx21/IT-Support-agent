@@ -160,15 +160,31 @@ les boutons **Approuver** et **Rejeter**. La décision est envoyée avec le mêm
 
 ## CI/CD
 
-La pipeline prévue vérifiera automatiquement :
+La pipeline GitHub Actions vérifie automatiquement :
 
 ```text
 Pull Request ou push
 ├── tests Python avec pytest
 ├── lint React avec ESLint
 ├── build de production avec Vite
-└── déploiement uniquement si tous les contrôles réussissent
+└── sur main : déploiement du frontend sur GitHub Pages
 ```
 
-La configuration GitHub Actions sera ajoutée dans
-`.github/workflows/ci.yml`.
+Le déploiement n'est exécuté qu'après la réussite des jobs backend et frontend.
+
+Pour activer le CD :
+
+1. dans **Settings > Pages**, sélectionner **GitHub Actions** comme source ;
+2. si le backend est hébergé, créer dans **Settings > Secrets and variables >
+   Actions > Variables** une variable `VITE_API_URL` contenant son URL publique,
+   sans slash final ;
+3. autoriser `https://malowx21.github.io` dans la variable `CORS_ORIGINS` du
+   backend ;
+4. pousser les changements sur `main` ou lancer manuellement le workflow.
+
+Le frontend sera disponible sur
+`https://malowx21.github.io/IT-Support-agent/`. Sans `VITE_API_URL`, il est tout
+de même publié, mais les appels au chatbot continuent de cibler l'API locale.
+GitHub Pages ne peut pas exécuter le backend Python/FastAPI.
+
+La configuration se trouve dans `.github/workflows/ci.yml`.
